@@ -35,11 +35,15 @@
       <div class="px-6 mt-5">
         <a class="px-3 py-2 bg-zinc-800 text-xs rounded-md" href="/edit">Edit Profile</a>
       </div>
-      <div class="posts w-full flex justify-between gap-1 py-2 pt-4 mt-5 flex-wrap border-t-2 border-gray-300">
+      <div class="posts w-full flex justify-start gap-1 py-2 pt-4 mt-5 flex-wrap border-t-2 border-gray-300">
         <% if(user.posts.length == 0) { %>
             <h3 class="text-center w-full">No Posts Yet</h3>
         <% } else { %>
-          <div class="post w-[32.5%] h-32 bg-sky-100"></div>
+          <% user.posts.forEach(post=>{ %>
+            <div class="post w-[32.5%] h-32 bg-sky-100">
+              <img src="/images/uploads/<%= post.image %>" alt="" class="w-full h-full object-cover">
+            </div>
+          <% }) %>
         <% } %>
       </div>
   </div>

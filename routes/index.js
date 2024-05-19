@@ -2,10 +2,10 @@ var express = require('express');
 const passport = require('passport');
 var router = express.Router();
 const UserModel = require('../models/user');
+const PostModel = require('../models/post');
 const localStrategy = require('passport-local');
 const isLoggedIn = require('../middlewares/middleware').isLoggedIn;
 const upload = require('../multer');
-const flash = 
 
 passport.use(new localStrategy(UserModel.authenticate()));
 
@@ -49,7 +49,7 @@ router.get('/feed', isLoggedIn, function(req, res) {
 });
 
 router.get('/profile', isLoggedIn,async function(req, res) {
-  const user = await UserModel.findOne({username:req.session.passport.user});
+  const user = await UserModel.findOne({username:req.session.passport.user}).populate('posts');
   res.render('profile', {user,footer: true});
 });
 
@@ -61,7 +61,7 @@ router.get('/edit', isLoggedIn, async function(req, res) {
   const user = await UserModel.findOne({username:req.session.passport.user});
   res.render('edit', {user,footer: true});
 });
-router.post('/update', upload.single('image'), isLoggedIn,async function(req, res) {
+router.post('/update', isLoggedIn, upload.single('image'), async function(req, res) {
   const user = await UserModel.findOneAndUpdate({username:req.session.passport.user},
     {username:req.body.username,name:req.body.name,bio:req.body.bio}, 
     {new: true}
@@ -69,11 +69,24 @@ router.post('/update', upload.single('image'), isLoggedIn,async function(req, re
   if(req.file){
     user.profilePic = req.file.filename;
     await user.save();
-}
+  }
   res.redirect('/profile');
 });
 
 router.get('/upload', isLoggedIn, function(req, res) {
   res.render('upload', {footer: true});
 });
+router.post('/upload',isLoggedIn,upload.single('postImg'),async function(req,res) {
+  const user = await UserModel.findOne({username:req.session.passport.user});
+  let npost = new PostModel({
+    image: req.file.filename,
+    caption: req.body.caption,
+    user: user._id
+  });
+  await npost.save();
+  user.posts.push(npost._id);
+  await user.save();
+  res.redirect('/profile');
+});
+
 module.exports = router;
